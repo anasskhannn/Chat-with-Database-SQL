@@ -47,8 +47,7 @@ for student in students:
     insert_student(*student)
 
 # You can now easily add new students like this:
-insert_student('Alice', 'Machine Learning', 'B', 92)
-insert_student('Bob', 'Machine Learning', 'A', 78)
+insert_student('Anas', 'Data Science', 'A', 99)
 
 # Display all records
 print("\nAll student records:")
