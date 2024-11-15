@@ -3,7 +3,6 @@ from config.api_key import Config
 from config.database import DatabaseConfig
 from agents.sql_agent import create_sql_agent_instance
 from langchain_groq import ChatGroq
-from demo import groq_api_key
 import sqlite3
 
 # Streamlit app setup
