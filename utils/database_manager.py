@@ -1,87 +1,61 @@
 import sqlite3
-import os
+import time
+from pathlib import Path
 
 class SQLiteManager:
-    def __init__(self, db_path="data/student.db"):
-        """
-        Initialize the SQLiteManager with the specified database path.
-        :param db_path: Path to the SQLite database file.
-        """
+    def __init__(self, db_path=None):
+        # Ensure that db_path defaults to the correct location
+        if db_path is None:
+            db_path = Path(__file__).parent.parent / "data/student.db"
+        
         self.db_path = db_path
+        print(f"Database path is: {self.db_path}")
+        
+        # Call connect method to establish connection
         self.connection = None
-        self.cursor = None
+        self.connect()
 
     def connect(self):
-        """Establish a connection to the SQLite database."""
-        if not os.path.exists(self.db_path):
-            raise FileNotFoundError(f"Database file not found: {self.db_path}")
-        self.connection = sqlite3.connect(self.db_path)
-        self.cursor = self.connection.cursor()
-        print(f"Connected to database: {self.db_path}")
+        """Establish a connection to the SQLite database"""
+        try:
+            # Check if the database file exists
+            if not self.db_path.exists():
+                raise FileNotFoundError(f"Database file not found: {self.db_path}")
+            
+            # Establish a connection to the database
+            self.connection = sqlite3.connect(self.db_path)
+            print(f"Connected to database: {self.db_path}")
+        except FileNotFoundError as e:
+            print(e)
+            self.connection = None
+        except sqlite3.Error as e:
+            print(f"SQLite error: {e}")
+            self.connection = None
 
-    def execute_query(self, query, params=()):
-        """
-        Execute a query on the database.
-        :param query: SQL query string.
-        :param params: Tuple of parameters for the query.
-        :return: Query results if it's a SELECT query, else None.
-        """
-        if not self.connection:
-            raise ConnectionError("No database connection established.")
-        
-        start_time = time.time()
-        self.cursor.execute(query, params)
-        end_time = time.time()
-        
-        print(f"Query executed in {end_time - start_time:.2f} seconds")
-        
-        if query.strip().upper().startswith("SELECT"):
-            return self.cursor.fetchall()
-        else:
+    def execute_query(self, query, params=None):
+        """Execute a database query and return results."""
+        if self.connection is None:
+            raise Exception("No database connection established.")
+
+        try:
+            start_time = time.time()
+
+            cursor = self.connection.cursor()
+            cursor.execute(query, params or [])
             self.connection.commit()
 
-    def close_connection(self):
+            execution_time = time.time() - start_time
+            print(f"Query executed in {execution_time:.2f} seconds")
+
+            # Fetch and return the result if needed
+            return cursor.fetchall()
+
+        except sqlite3.Error as e:
+            print(f"SQLite error: {e}")
+            return []
+
+    def close(self):
         """Close the database connection."""
         if self.connection:
             self.connection.close()
             print("Database connection closed.")
-
-    def switch_database(self, new_db_path):
-        """
-        Switch to a different SQLite database.
-        :param new_db_path: Path to the new SQLite database file.
-        """
-        self.close_connection()
-        self.db_path = new_db_path
-        self.connect()
-        print(f"Switched to database: {new_db_path}")
-
-# Example usage:
-if __name__ == "__main__":
-    db_manager = SQLiteManager()
-
-    try:
-        db_manager.connect()
-
-        # Example query: Create table if not exists
-        create_table_query = """
-        CREATE TABLE IF NOT EXISTS STUDENT(
-            NAME VARCHAR(25),
-            CLASS VARCHAR(25),
-            SECTION VARCHAR(25),
-            MARKS INT
-        )
-        """
-        db_manager.execute_query(create_table_query)
-
-        # Insert example
-        insert_query = "INSERT INTO STUDENT (NAME, CLASS, SECTION, MARKS) VALUES (?, ?, ?, ?)"
-        db_manager.execute_query(insert_query, ("Jane Doe", "Data Science", "A", 95))
-
-        # Fetch example
-        select_query = "SELECT * FROM STUDENT"
-        records = db_manager.execute_query(select_query)
-        print("Records:", records)
-
-    finally:
-        db_manager.close_connection()
