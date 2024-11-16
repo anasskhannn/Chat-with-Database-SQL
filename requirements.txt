@@ -30,3 +30,5 @@ unstructured
 pytube
 numexpr
 huggingface_hub
+pymysql
+streamlit
