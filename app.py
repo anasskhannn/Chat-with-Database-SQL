@@ -8,7 +8,7 @@ from langchain.agents.agent_toolkits import SQLDatabaseToolkit
 from sqlalchemy import create_engine
 import sqlite3
 from langchain_groq import ChatGroq
-from demo import groq_api_key
+from api_key import groq_api_key
 
 st.set_page_config(page_title="LangChain: Chat with SQL DB", page_icon="🦜")
 st.title("🦜 LangChain: Chat with SQL DB")
@@ -44,7 +44,7 @@ llm=ChatGroq(groq_api_key=groq_api_key,model_name="Llama3-8b-8192",streaming=Tru
 def configure_db(db_uri,mysql_host=None,mysql_user=None,mysql_password=None,mysql_db=None):
     if db_uri==LOCALDB:
         # Give the Path to Your DataBase here
-        dbfilepath=(Path(__file__).parent/"student.db").absolute()
+        dbfilepath=(Path(__file__).parent/"data/student.db").absolute()
         print(dbfilepath)
         creator = lambda: sqlite3.connect(f"file:{dbfilepath}?mode=ro", uri=True)
         return SQLDatabase(create_engine("sqlite:///", creator=creator))
