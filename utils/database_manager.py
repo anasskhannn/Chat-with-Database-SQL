@@ -49,10 +49,13 @@ class SQLiteManager:
 
             # Fetch and return the result if needed
             return cursor.fetchall()
+        
+            # Return result along with execution time
+            return result, execution_time
 
         except sqlite3.Error as e:
             print(f"SQLite error: {e}")
-            return []
+            return [] , 0
 
     def close(self):
         """Close the database connection."""
