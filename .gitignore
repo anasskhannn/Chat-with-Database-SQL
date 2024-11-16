@@ -1,4 +1,5 @@
-student.db
+*.db
+*.sql
 .env
 __pycache__
 structure.txt
