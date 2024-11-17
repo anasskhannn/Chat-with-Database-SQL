@@ -102,13 +102,29 @@ if db_uri == MYSQL:
 else:
     db = configure_db(db_uri)
 
+# Get schema of the database
+schema = db.get_table_names()
+st.write("Database Schema:\n", schema)
+
+# Allow the user to preview table contents
+selected_table = st.sidebar.selectbox("Select a table to preview its contents", ["None"] + schema)
+if selected_table != "None":
+    try:
+        query = f"SELECT * FROM {selected_table} LIMIT 10"
+        preview_data = db.run_query(query)
+        st.write(f"Preview of `{selected_table}`:")
+        st.write(preview_data)
+    except Exception as e:
+        st.error(f"Error fetching data from `{selected_table}`: {e}")
+
 # Initialize toolkit and agent for interacting with the database
 toolkit = SQLDatabaseToolkit(db=db, llm=llm)
 agent = create_sql_agent(
     llm=llm,
     toolkit=toolkit,
     verbose=True,
-    agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION
+    agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    handle_parsing_errors=True
 )
 
 # Initialize session state for storing chat messages
@@ -126,8 +142,41 @@ if user_query:
     st.session_state.messages.append({"role": "user", "content": user_query})
     st.chat_message("user").write(user_query)
 
-    with st.chat_message("assistant"):
-        streamlit_callback = StreamlitCallbackHandler(st.container())
-        response = agent.run(user_query, callbacks=[streamlit_callback])
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        st.write(response)
+    # Provide context to the LLM
+    query_with_hint = f"""
+    You are interacting with a database that contains the following tables: {', '.join(schema)}.
+    Use this schema information to answer the user's question accurately.
+    The user query is: {user_query}
+    """
+
+    try:
+        with st.chat_message("assistant"):
+            streamlit_callback = StreamlitCallbackHandler(st.container())
+            
+            # Log the agent's actions for debugging
+            st.info("Generating SQL query...")
+
+            # Run the query
+            response = agent.run(query_with_hint, callbacks=[streamlit_callback])
+
+            # Display the query and result
+            st.write("SQL Query Generated and Executed:")
+            st.code(response, language="sql")  # Show query or agent output
+            st.session_state.messages.append({"role": "assistant", "content": response})
+    except ValueError as ve:
+        # Handle parsing issues
+        st.error("Parsing issue with the response. The agent may have misunderstood the query.")
+        st.exception(ve)
+    except Exception as e:
+        # Handle general errors
+        st.error("An unexpected error occurred while processing your request.")
+        st.exception(e)
+
+# Enhanced Debugging Options
+if st.sidebar.checkbox("Debugging Mode"):
+    st.write("Debugging Information:")
+    st.write("Available Schema:")
+    st.json(schema)
+    st.write("Session Messages:")
+    st.json(st.session_state.messages)
+
