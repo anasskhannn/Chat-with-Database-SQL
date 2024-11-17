@@ -1,8 +1,13 @@
 This is the complete project chat with database in natural language using llm and ai agents.
 
-# How to Set Groq Api key Chat Link:
 
-https://chatgpt.com/share/1c00120e-9e8f-42b6-bbf3-7bb40a0dac7a
-- First create another file to store and fetch tha api key
-- In my case it was api_key.py 
-- In future i have to add a mysql data base connection to it to scale the project
+# Milestones
+- Create a chat with sqlite connection with local db. ✅
+- Create a connection with mysql database.✅
+- Create option to download chat history.✅
+- Better Response quality for Easy Understanding of answer.✅
+- Add context of previous to answer similar queries to reduce computation.
+    - By adding a memory to local storage and retrieve the response of similar queries from there.
+
+- Better UI
+- Make the code base modular for readability and easy modifications.
