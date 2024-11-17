@@ -11,6 +11,7 @@ from langchain_groq import ChatGroq
 from urllib.parse import quote_plus
 import pymysql
 import pandas as pd
+from datetime import datetime
 from api_key import groq_api_key
 
 st.set_page_config(page_title="LangChain: Chat with SQL DB", page_icon="🦜")
@@ -41,7 +42,11 @@ if not api_key:
     st.info("Please add the Groq API key.")
 
 # LLM Model
-llm = ChatGroq(groq_api_key=groq_api_key, model_name="Llama3-8b-8192", streaming=True)
+llm = ChatGroq(groq_api_key=groq_api_key, 
+               model_name="Llama3-8b-8192", 
+               temperature=0.0,
+               top_p=1.0,
+               streaming=True)
 
 @st.cache_resource(ttl="2h")
 def configure_db(db_uri, mysql_host=None, mysql_user=None, mysql_password=None, mysql_db=None):
@@ -110,7 +115,7 @@ st.write("Database Schema:\n", schema)  # Log schema for debugging
 # Define a function to format the query and enhance its clarity
 def format_query_for_agent(user_query, schema):
     # Provide schema context to the agent
-    schema_hint = f"Database schema includes tables: {', '.join(schema)}. Please answer the question in detail, not just by numbers."
+    schema_hint = f"Database schema includes tables: {', '.join(schema)}. Please provide a detailed, formatted answer, including the relevant data in a human-readable way."
 
     # Append the schema hint to the user's query to help the agent understand the required output
     return f"{schema_hint}\nAnswer the question: {user_query}"
@@ -153,6 +158,7 @@ if user_query:
 
         # Save the response along with the SQL queries that were executed (SQL query chain)
         st.session_state.chat_history.append({
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # Timestamp for when the query is made
             "user_query": user_query,
             "sql_query": formatted_query,  # You may want to log the exact SQL query here
             "response": response
