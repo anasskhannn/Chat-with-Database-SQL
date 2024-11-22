@@ -10,6 +10,8 @@ import sqlite3
 from langchain_groq import ChatGroq
 from urllib.parse import quote_plus
 import pymysql
+import pandas as pd
+from datetime import datetime
 from api_key import groq_api_key
 
 st.set_page_config(page_title="LangChain: Chat with SQL DB", page_icon="🦜")
@@ -40,7 +42,11 @@ if not api_key:
     st.info("Please add the Groq API key.")
 
 # LLM Model
-llm = ChatGroq(groq_api_key=groq_api_key, model_name="Llama3-8b-8192", streaming=True)
+llm = ChatGroq(groq_api_key=groq_api_key, 
+               model_name="Llama3-8b-8192", 
+               temperature=0.0,
+               top_p=1.0,
+               streaming=True)
 
 @st.cache_resource(ttl="2h")
 def configure_db(db_uri, mysql_host=None, mysql_user=None, mysql_password=None, mysql_db=None):
@@ -102,18 +108,35 @@ if db_uri == MYSQL:
 else:
     db = configure_db(db_uri)
 
+# Get schema of the database
+schema = db.get_table_names()
+st.write("Database Schema:\n", schema)  # Log schema for debugging
+
+# Define a function to format the query and enhance its clarity
+def format_query_for_agent(user_query, schema):
+    # Provide schema context to the agent
+    schema_hint = f"Database schema includes tables: {', '.join(schema)}. Please provide a detailed, formatted answer, including the relevant data in a human-readable way."
+
+    # Append the schema hint to the user's query to help the agent understand the required output
+    return f"{schema_hint}\nAnswer the question: {user_query}"
+
 # Initialize toolkit and agent for interacting with the database
 toolkit = SQLDatabaseToolkit(db=db, llm=llm)
-agent = create_sql_agent(
+agent = create_sql_agent (
     llm=llm,
     toolkit=toolkit,
     verbose=True,
-    agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION
+    agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    handle_parsing_errors=True 
 )
 
-# Initialize session state for storing chat messages
+# Initialize session state for storing chat messages and chat history
 if "messages" not in st.session_state or st.sidebar.button("Clear message history"):
     st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
+    
+# Initialize chat_history if it doesn't exist
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
 
 # Display chat messages
 for msg in st.session_state.messages:
@@ -123,11 +146,39 @@ for msg in st.session_state.messages:
 user_query = st.chat_input(placeholder="Ask anything from the database")
 
 if user_query:
+    formatted_query = format_query_for_agent(user_query, schema)
     st.session_state.messages.append({"role": "user", "content": user_query})
     st.chat_message("user").write(user_query)
 
     with st.chat_message("assistant"):
         streamlit_callback = StreamlitCallbackHandler(st.container())
-        response = agent.run(user_query, callbacks=[streamlit_callback])
+        response = agent.run(formatted_query, callbacks=[streamlit_callback])
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.write(response)
+
+        # Save the response along with the SQL queries that were executed (SQL query chain)
+        st.session_state.chat_history.append({
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),  # Timestamp for when the query is made
+            "user_query": user_query,
+            "sql_query": formatted_query,  # You may want to log the exact SQL query here
+            "response": response
+        })
+
+        st.write(response)
+
+# Saving full chat history in the session state
+def to_csv(chat_history):
+    # Convert the chat history to a DataFrame
+    df = pd.DataFrame(chat_history)
+    # Convert dataframe to CSV without saving to disk
+    csv = df.to_csv(index=False).encode()
+    return csv
+
+# Provide the option to download the full chat history as CSV
+csv_data = to_csv(st.session_state.chat_history)
+st.download_button(
+    label="Download Full Chat History with SQL Queries as CSV",
+    data=csv_data,
+    file_name="chat_history.csv",
+    mime="text/csv"
+)
