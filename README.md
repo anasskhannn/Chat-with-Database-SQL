@@ -11,3 +11,10 @@ This is the complete project chat with database in natural language using llm an
 
 - Better UI
 - Make the code base modular for readability and easy modifications.
+
+
+# Modifications
+
+- To remove double answers from natural language output
+- To change location of download button 
+- To make model better
