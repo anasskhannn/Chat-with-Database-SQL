@@ -2,5 +2,6 @@
 *.sql
 *.mwb
 .env
+.venv
 __pycache__
 structure.txt
