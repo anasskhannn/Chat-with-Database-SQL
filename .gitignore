@@ -1,6 +1,6 @@
-*.db
-*.sql
 *.mwb
 .env
 __pycache__
 structure.txt
+data/my_sql
+data/local
