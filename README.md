@@ -32,18 +32,16 @@ D:.
 |   requirements.txt
 |   structure.txt
 |           
-+---data
-|   |   README.md
++---database
 |   |   
-|   +---data_source
-|   |   |   |   local_source
-|   |   |   |   |   test.sql
-|   |   |   |   mysql_source    
-|   |   |   |   |   test.sql
-|   |           
 |   +---local
 |   |       test.db
-|   |       
 |   +---my_sql
-|   |   |   my_sql_databases.db 
+|   |       my_sql_databases.db 
++---data_source
+|   |   README.md
+|   |   |   local_source
+|   |   |   |   test.sql
+|   |   |   mysql_source    
+|   |   |   |   test.sql
 ```
