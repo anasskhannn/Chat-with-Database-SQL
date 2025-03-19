@@ -30,7 +30,6 @@ D:.
 |   docker-compose.yml
 |   README.md
 |   requirements.txt
-|   sqlite.py
 |   structure.txt
 |           
 +---data
