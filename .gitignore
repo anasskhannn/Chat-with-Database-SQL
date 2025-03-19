@@ -2,5 +2,4 @@
 .env
 .venv
 __pycache__
-data/my_sql
-data/local
+database/

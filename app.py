@@ -52,7 +52,7 @@ llm = ChatGroq(groq_api_key=groq_api_key,
 def configure_db(db_uri, mysql_host=None, mysql_user=None, mysql_password=None, mysql_db=None):
     if db_uri == LOCALDB:
         # SQLite setup
-        dbfilepath = (Path(__file__).parent / "data/local/student.db").absolute()
+        dbfilepath = (Path(__file__).parent / "database/local/student.db").absolute()
         creator = lambda: sqlite3.connect(f"file:{dbfilepath}?mode=ro", uri=True)
         return SQLDatabase(create_engine("sqlite:///", creator=creator))
 
