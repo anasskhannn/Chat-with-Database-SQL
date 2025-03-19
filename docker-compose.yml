@@ -8,4 +8,4 @@ services:
       - "3306:3306"
     volumes:
         # Your Local Path : MySql Container Database Path
-      - D:/Project/Chat-with-Database-SQL/data/my_sql:/var/lib/mysql
+      - D:/Project/Chat-with-Database-SQL/database/my_sql:/var/lib/mysql
