@@ -1,0 +1,11 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password@123
+    ports:
+      - "3306:3306"
+    volumes:
+        # Your Local Path : MySql Container Database Path
+      - D:/Project/Chat-with-Database-SQL/data/my_sql:/var/lib/mysql

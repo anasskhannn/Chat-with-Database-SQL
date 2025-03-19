@@ -1,7 +1,7 @@
-*.db
-*.sql
 *.mwb
 .env
 .venv
 __pycache__
 structure.txt
+data/my_sql
+data/local
