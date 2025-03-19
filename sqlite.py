@@ -1,7 +1,7 @@
 import sqlite3
 
 # Connect to SQLite
-connection = sqlite3.connect("data/student.db")
+connection = sqlite3.connect("data/local/student.db")
 cursor = connection.cursor()
 
 # Create the table if it doesn't exist
@@ -35,8 +35,7 @@ def insert_student(name, student_class, section, marks):
 
 # Example usage: Insert records
 students = [
-    ('Krish', 'Data Science', 'A', 90),
-    ('John', 'Data Science', 'B', 100),
+    ('John', 'Data Science', 'B', 80),
     ('Mukesh', 'Data Science', 'A', 86),
     ('Jacob', 'DEVOPS', 'A', 50),
     ('Dipesh', 'DEVOPS', 'A', 35)
