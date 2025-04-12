@@ -13,12 +13,27 @@ import pymysql
 import pandas as pd
 from datetime import datetime
 from api_key import groq_api_key
+import glob
+import os
 
 st.set_page_config(page_title="LangChain: Chat with SQL DB", page_icon="🦜")
 st.title("🦜 LangChain: Chat with SQL DB")
 
 LOCALDB = "USE_LOCALDB"
 MYSQL = "USE_MYSQL"
+
+def get_available_databases(base_path="database/local"):
+    """Find all SQLite database files in the specified directory"""
+    project_root = Path(__file__).parent
+    search_path = project_root / base_path
+    
+    # Find all database files with common SQLite extensions
+    db_files = []
+    for ext in ['.db', '.sqlite', '.sqlite3']:
+        db_files.extend(list(search_path.glob(f"*{ext}")))
+    
+    # Convert to relative paths for display
+    return [db.relative_to(project_root) for db in db_files]
 
 radio_opt = ["Use SQLite 3 Database", "Connect to your MySQL Database"]
 
@@ -32,6 +47,18 @@ if radio_opt.index(selected_opt) == 1:
     mysql_db = st.sidebar.text_input("MySQL Database")
 else:
     db_uri = LOCALDB
+    # Get list of available databases
+    available_dbs = get_available_databases()
+    
+    if not available_dbs:
+        st.error("No SQLite databases found in the database/local directory!")
+        st.stop()
+    
+    selected_db = st.sidebar.selectbox(
+        "Select SQLite Database",
+        options=available_dbs,
+        format_func=lambda x: x.name
+    )
 
 api_key = st.sidebar.text_input(label="Groq API Key", type="password")
 
@@ -48,13 +75,23 @@ llm = ChatGroq(groq_api_key=groq_api_key,
                top_p=1.0,
                streaming=True)
 
-@st.cache_resource(ttl="2h")
-def configure_db(db_uri, mysql_host=None, mysql_user=None, mysql_password=None, mysql_db=None):
+def configure_db(db_uri, selected_db=None, mysql_host=None, mysql_user=None, mysql_password=None, mysql_db=None):
     if db_uri == LOCALDB:
-        # SQLite setup
-        dbfilepath = (Path(__file__).parent / "database/local/student.db").absolute()
+        # SQLite setup with dynamic database selection
+        if not selected_db:
+            st.error("No database selected")
+            st.stop()
+            
+        dbfilepath = (Path(__file__).parent / selected_db).absolute()
+        st.write(f"Connecting to SQLite database: {dbfilepath}")
         creator = lambda: sqlite3.connect(f"file:{dbfilepath}?mode=ro", uri=True)
-        return SQLDatabase(create_engine("sqlite:///", creator=creator))
+        
+        try:
+            db = SQLDatabase(create_engine("sqlite:///", creator=creator))
+            return db
+        except Exception as e:
+            st.error(f"SQLite Connection Error: {str(e)}")
+            st.stop()
 
     elif db_uri == MYSQL:
         if not (mysql_host and mysql_user and mysql_password and mysql_db):
@@ -106,11 +143,15 @@ if db_uri == MYSQL:
                       mysql_password=mysql_password,
                       mysql_db=mysql_db)
 else:
-    db = configure_db(db_uri)
+    db = configure_db(db_uri, selected_db=selected_db)
 
-# Get schema of the database
-schema = db.get_table_names()
-st.write("Database Schema:\n", schema)  # Log schema for debugging
+try:
+    # Get schema of the database
+    schema = db.get_table_names()
+    st.write("Database Schema:", schema)  # Log schema for debugging
+except Exception as e:
+    st.error(f"Error retrieving schema: {str(e)}")
+    schema = []
 
 # Define a function to format the query and enhance its clarity
 def format_query_for_agent(user_query, schema):
