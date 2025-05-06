@@ -1,0 +1,40 @@
+[project]
+name = "chat-with-database-sql"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "arxiv>=2.2.0",
+    "bs4>=0.0.2",
+    "chromadb>=0.6.3",
+    "duckdb>=1.2.2",
+    "duckduckgo-search==5.3.1b1",
+    "faiss-cpu>=1.11.0",
+    "huggingface-hub>=0.30.2",
+    "ipykernel>=6.29.5",
+    "langchain>=0.3.25",
+    "langchain-chroma>=0.2.3",
+    "langchain-community>=0.3.23",
+    "langchain-groq>=0.3.2",
+    "langchain-huggingface>=0.1.2",
+    "langchain-openai>=0.3.16",
+    "langchain-text-splitters>=0.3.8",
+    "mysql-connector-python>=9.3.0",
+    "numexpr>=2.10.2",
+    "openai>=1.77.0",
+    "pandas>=2.2.3",
+    "plotly>=6.0.1",
+    "pymupdf>=1.25.5",
+    "pymysql>=1.1.1",
+    "pypdf>=5.4.0",
+    "python-dotenv>=1.1.0",
+    "pytube>=15.0.0",
+    "sentence-transformers>=4.1.0",
+    "sqlalchemy>=2.0.40",
+    "streamlit>=1.45.0",
+    "unstructured>=0.17.2",
+    "validators==0.28.1",
+    "wikipedia>=1.4.0",
+    "youtube-transcript-api>=1.0.3",
+]
